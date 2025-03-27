@@ -1,11 +1,11 @@
 {
   "name": "dagingue-api",
   "version": "1.0.0",
-  "main": "dist/server.js",
+  "main": "api/dist/server.js",
   "scripts": {
     "build": "tsc",
     "prestart": "npm run build",
-    "start": "node dist/server.js",
+    "start": "node api/dist/server.js",
     "dev": "tsx src/server.ts"
   },
   "keywords": [],
