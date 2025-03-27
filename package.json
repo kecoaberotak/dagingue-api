@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "api/dist/server.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && mkdir -p api/dist && mv dist/* api/dist/",
     "prestart": "npm run build",
     "start": "node api/dist/server.js",
     "dev": "tsx src/server.ts"
