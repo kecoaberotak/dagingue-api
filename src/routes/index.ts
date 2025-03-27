@@ -4,7 +4,7 @@ import usersRoutes from "./user.routes";
 
 const router = Router();
 
-router.use("/health", healthRouter);
+router.use("/", healthRouter);
 router.use("/api/users", usersRoutes);
 
 export default router;
