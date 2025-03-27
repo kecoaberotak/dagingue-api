@@ -7,10 +7,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// app.get("/", (req, res) => {
-//   res.send({ message: "Dagingue API is running! 🚀" });
-// });
-
 app.use("/", routes);
 
 export default app;
