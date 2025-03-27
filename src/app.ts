@@ -11,6 +11,6 @@ app.use(express.json());
 //   res.send({ message: "Dagingue API is running! 🚀" });
 // });
 
-app.use("/api", routes);
+app.use("/", routes);
 
 export default app;
