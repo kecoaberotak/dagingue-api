@@ -9,22 +9,27 @@ export class AuthController {
 
   constructor() {
     this.authService = new AuthService();
+
+    // Bind metode agar tetap dalam konteks instance class
+    this.signUp = this.signUp.bind(this);
+    this.signIn = this.signIn.bind(this);
+    this.signOut = this.signOut.bind(this);
   }
 
-  async signUp(req: Request, res: Response) {
+  async signUp(req: Request, res: Response): Promise<void> {
     try {
       const dto = plainToInstance(AuthDTO, req.body);
       const errors = await validate(dto);
 
       if (errors.length > 0) {
-        return res.status(400).json({
+        res.status(400).json({
           message: "Validasi gagal",
           errors: errors.map((err) => err.constraints),
         });
       }
 
       const result = await this.authService.signUp(dto);
-      return res.status(201).json(result);
+      res.status(201).json(result);
     } catch (error) {
       if (error instanceof Error) {
         res.status(400).json({
@@ -42,20 +47,20 @@ export class AuthController {
     }
   }
 
-  async signIn(req: Request, res: Response) {
+  async signIn(req: Request, res: Response): Promise<void> {
     try {
       const dto = plainToInstance(AuthDTO, req.body);
       const errors = await validate(dto);
 
       if (errors.length > 0) {
-        return res.status(400).json({
+        res.status(400).json({
           message: "Validasi gagal",
           errors: errors.map((err) => err.constraints),
         });
       }
 
       const result = await this.authService.signIn(dto);
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
       if (error instanceof Error) {
         res.status(400).json({
@@ -73,10 +78,10 @@ export class AuthController {
     }
   }
 
-  async signOut(req: Request, res: Response) {
+  async signOut(req: Request, res: Response): Promise<void> {
     try {
       const result = await this.authService.signOut();
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } catch (error) {
       if (error instanceof Error) {
         res.status(400).json({
