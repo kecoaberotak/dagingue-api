@@ -7,6 +7,6 @@ const router = Router();
 
 router.use("/", healthRouter);
 router.use("/users", usersRoutes);
-router.use("/auth");
+router.use("/auth", authRoutes);
 
 export default router;
