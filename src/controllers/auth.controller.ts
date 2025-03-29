@@ -29,7 +29,7 @@ export class AuthController {
       }
 
       const result = await this.authService.signUp(dto);
-      res.status(201).json(result);
+      res.status(201).json({ status: true, statusCode: 201, result });
     } catch (error) {
       if (error instanceof Error) {
         res.status(400).json({
@@ -60,7 +60,7 @@ export class AuthController {
       }
 
       const result = await this.authService.signIn(dto);
-      res.status(200).json(result);
+      res.status(200).json({ status: true, statusCode: 200, result });
     } catch (error) {
       if (error instanceof Error) {
         res.status(400).json({
@@ -81,7 +81,7 @@ export class AuthController {
   async signOut(req: Request, res: Response): Promise<void> {
     try {
       const result = await this.authService.signOut();
-      res.status(200).json(result);
+      res.status(200).json({ status: true, statusCode: 200, result });
     } catch (error) {
       if (error instanceof Error) {
         res.status(400).json({
