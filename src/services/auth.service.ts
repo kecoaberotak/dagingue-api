@@ -28,6 +28,7 @@ export class AuthService {
     return {
       message: "Login Berhasil",
       token: signInData.session?.access_token,
+      email: signInData.user?.email,
     };
   }
 
