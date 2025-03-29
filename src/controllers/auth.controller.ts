@@ -26,6 +26,7 @@ export class AuthController {
           message: "Validasi gagal",
           errors: errors.map((err) => err.constraints),
         });
+        return;
       }
 
       const result = await this.authService.signUp(dto);
@@ -37,12 +38,14 @@ export class AuthController {
           statusCode: 400,
           message: error.message,
         });
+        return;
       } else {
         res.status(500).json({
           status: false,
           statusCode: 500,
           message: "An unknown error occurred",
         });
+        return;
       }
     }
   }
@@ -57,6 +60,7 @@ export class AuthController {
           message: "Validasi gagal",
           errors: errors.map((err) => err.constraints),
         });
+        return;
       }
 
       const result = await this.authService.signIn(dto);
@@ -68,12 +72,14 @@ export class AuthController {
           statusCode: 400,
           message: error.message,
         });
+        return;
       } else {
         res.status(500).json({
           status: false,
           statusCode: 500,
           message: "An unknown error occurred",
         });
+        return;
       }
     }
   }
@@ -89,12 +95,14 @@ export class AuthController {
           statusCode: 400,
           message: error.message,
         });
+        return;
       } else {
         res.status(500).json({
           status: false,
           statusCode: 500,
           message: "An unknown error occurred",
         });
+        return;
       }
     }
   }

@@ -11,6 +11,7 @@ export class UserController {
         message: "User created successfully",
         user,
       });
+      return;
     } catch (error) {
       if (error instanceof Error) {
         res.status(400).json({
@@ -18,12 +19,14 @@ export class UserController {
           statusCode: 400,
           message: error.message,
         });
+        return;
       } else {
         res.status(500).json({
           status: false,
           statusCode: 500,
           message: "An unknown error occurred",
         });
+        return;
       }
     }
   }
@@ -37,6 +40,7 @@ export class UserController {
         message: "Success get all users",
         users,
       });
+      return;
     } catch (error) {
       if (error instanceof Error) {
         res.status(500).json({
@@ -44,12 +48,14 @@ export class UserController {
           statusCode: 500,
           message: error.message,
         });
+        return;
       } else {
         res.status(500).json({
           status: false,
           statusCode: 500,
           message: "An unknown error occurred",
         });
+        return;
       }
     }
   }
@@ -63,6 +69,7 @@ export class UserController {
         message: "Success get user by id",
         user,
       });
+      return;
     } catch (error) {
       if (error instanceof Error) {
         res.status(404).json({
@@ -70,12 +77,14 @@ export class UserController {
           statusCode: 404,
           message: error.message,
         });
+        return;
       } else {
         res.status(500).json({
           status: false,
           statusCode: 500,
           message: "An unknown error occurred",
         });
+        return;
       }
     }
   }
@@ -89,6 +98,7 @@ export class UserController {
         message: "User updated successfully",
         user,
       });
+      return;
     } catch (error) {
       if (error instanceof Error) {
         res.status(400).json({
@@ -96,12 +106,14 @@ export class UserController {
           statusCode: 400,
           message: error.message,
         });
+        return;
       } else {
         res.status(500).json({
           status: false,
           statusCode: 500,
           message: "An unknown error occurred",
         });
+        return;
       }
     }
   }
@@ -114,6 +126,7 @@ export class UserController {
         statusCode: 200,
         message: "User deleted successfully",
       });
+      return;
     } catch (error) {
       if (error instanceof Error) {
         res.status(404).json({
@@ -121,12 +134,14 @@ export class UserController {
           statusCode: 404,
           message: error.message,
         });
+        return;
       } else {
         res.status(500).json({
           status: false,
           statusCode: 500,
           message: "An unknown error occurred",
         });
+        return;
       }
     }
   }
