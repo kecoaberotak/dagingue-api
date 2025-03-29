@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES6",
+    "types": ["node", "express"], // tambahan baru
     "module": "CommonJS",
     "rootDir": "./src",
     "outDir": "./dist",
@@ -11,6 +12,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src"],
+  // "include": ["src"],
+  "include": ["src/**/*.ts", "types/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
