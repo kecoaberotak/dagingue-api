@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { BumbuService } from "../services/bumbu.service";
+import { supabase } from "../config/supabase";
 
 export class BumbuController {
   static async getAll(req: Request, res: Response) {
@@ -63,12 +64,89 @@ export class BumbuController {
 
   static async create(req: Request, res: Response) {
     try {
-      const data = await BumbuService.createBumbu(req.body);
+      const { nama, deskripsi, harga } = req.body;
+      console.log("Body:", req.body); // Cek apakah field masuk
+      console.log("File:", req.file); // Cek apakah file masuk
+
+      // Validasi input
+      if (!nama || !deskripsi || !harga) {
+        res.status(400).json({
+          status: false,
+          statusCode: 400,
+          message: "Nama, deskripsi, dan harga wajib diisi",
+        });
+        return;
+      }
+
+      if (!/^\d+$/.test(harga)) {
+        res.status(400).json({
+          status: false,
+          statusCode: 400,
+          message: "Harga harus berupa angka bulat tanpa desimal",
+        });
+        return;
+      }
+
+      // Validasi harga harus angka
+      const parsedHarga = parseFloat(harga);
+      if (isNaN(parsedHarga)) {
+        res.status(400).json({
+          status: false,
+          statusCode: 400,
+          message: "Harga harus berupa angka",
+        });
+        return;
+      }
+
+      const file = req.file;
+
+      if (!file) {
+        res.status(400).json({
+          status: false,
+          statusCode: 400,
+          message: "Gambar wajib diunggah",
+        });
+        return;
+      }
+
+      // Validasi ekstensi file
+      const allowedExtensions = ["jpg", "jpeg", "png", "webp"];
+      const fileExtension = file.originalname.split(".").pop()?.toLowerCase();
+
+      if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+        res.status(400).json({
+          status: false,
+          statusCode: 400,
+          message: "Format file tidak valid. Hanya diperbolehkan jpg, jpeg, png, webp",
+        });
+        return;
+      }
+
+      // simpan file gambar ke Supabase Storage
+      const filename = `bumbu/${Date.now()}-${file.originalname}`;
+      const { error: uploadError } = await supabase.storage.from("dagingue-api").upload(filename, file.buffer, { contentType: file.mimetype });
+
+      if (uploadError) {
+        throw new Error(uploadError.message);
+      }
+
+      // dapatkan url gambar
+      const { data } = supabase.storage.from("dagingue-api").getPublicUrl(filename);
+
+      // simpan data ke database
+      const newBumbu = await BumbuService.createBumbu({
+        nama,
+        deskripsi,
+        harga: parsedHarga,
+        gambar: data.publicUrl,
+      });
+      console.log(newBumbu, "Data newBumbu");
+
       res.status(201).json({
         status: true,
         statusCode: 201,
-        message: "Success create bumbu",
-        data,
+        message: "Bumbu berhasil ditambahkan",
+        newBumbu,
       });
       return;
     } catch (error) {

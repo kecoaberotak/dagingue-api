@@ -2,7 +2,7 @@ export interface CreateBumbuDTO {
   nama: string;
   deskripsi: string;
   gambar: string;
-  harga: string;
+  harga: number;
 }
 
 export interface UpdateBumbuDTO {
@@ -10,5 +10,5 @@ export interface UpdateBumbuDTO {
   nama?: string;
   deskripsi?: string;
   gambar?: string;
-  harga?: string;
+  harga?: number;
 }
