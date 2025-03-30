@@ -6,6 +6,7 @@ export interface CreateBumbuDTO {
 }
 
 export interface UpdateBumbuDTO {
+  id?: string;
   nama?: string;
   deskripsi?: string;
   gambar?: string;
