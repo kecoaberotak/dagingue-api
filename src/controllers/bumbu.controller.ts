@@ -65,8 +65,6 @@ export class BumbuController {
   static async create(req: Request, res: Response) {
     try {
       const { nama, deskripsi, harga } = req.body;
-      console.log("Body:", req.body); // Cek apakah field masuk
-      console.log("File:", req.file); // Cek apakah file masuk
 
       // Validasi input
       if (!nama || !deskripsi || !harga) {
@@ -140,7 +138,6 @@ export class BumbuController {
         harga: parsedHarga,
         gambar: data.publicUrl,
       });
-      console.log(newBumbu, "Data newBumbu");
 
       res.status(201).json({
         status: true,
