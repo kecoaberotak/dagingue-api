@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { BumbuService } from "../services/bumbu.service";
 import { supabase } from "../config/supabase";
+import { uploadImage } from "../utils/uploadImage";
+import { deleteImage } from "../utils/deleteImage";
 
 export class BumbuController {
   static async getAll(req: Request, res: Response) {
@@ -128,60 +130,24 @@ export class BumbuController {
         return;
       }
 
-      if (!file.buffer) {
-        res.status(400).json({
-          status: false,
-          statusCode: 400,
-          message: "File tidak valid atau corrupt",
-        });
-        return;
-      }
+      // upload image
+      const result = await uploadImage(file, "bumbu");
 
-      // Validasi ekstensi file
-      const allowedExtensions = ["jpg", "jpeg", "png", "webp"];
-
-      // Cek apakah nama file mengandung titik (".")
-      if (!file.originalname.includes(".")) {
-        res.status(400).json({
-          status: false,
-          statusCode: 400,
-          message: "Format file tidak valid. Hanya diperbolehkan jpg, jpeg, png, webp",
-        });
-        return;
-      }
-
-      const fileExtension = file.originalname.split(".").pop()?.toLowerCase();
-      if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-        res.status(400).json({
-          status: false,
-          statusCode: 400,
-          message: "Format file tidak valid. Hanya diperbolehkan jpg, jpeg, png, webp",
-        });
-        return;
-      }
-
-      // simpan file gambar ke Supabase Storage
-      const filename = `bumbu/${Date.now()}-${file.originalname}`;
-      const { error: uploadError } = await supabase.storage.from("dagingue-api").upload(filename, file.buffer, { contentType: file.mimetype });
-
-      if (uploadError) {
+      if (result.error) {
         res.status(500).json({
           status: false,
           statusCode: 500,
-          message: "Gagal mengunggah gambar ke server",
+          message: `Gagal mengunggah gambar ke server: ${result.error}`,
         });
         return;
       }
-
-      // dapatkan url gambar
-      const { data } = supabase.storage.from("dagingue-api").getPublicUrl(filename);
 
       // simpan data ke database
       const newBumbu = await BumbuService.createBumbu({
         nama,
         deskripsi,
         harga: parsedHarga,
-        gambar: data.publicUrl,
+        gambar: result.publicUrl!,
       });
 
       res.status(201).json({
@@ -278,61 +244,33 @@ export class BumbuController {
       // Cek apakah ada gambar baru
       let newGambar = oldBumbu.gambar; // Default: pakai gambar lama
       if (file) {
-        // Validasi ekstensi file
-        const allowedExtensions = ["jpg", "jpeg", "png", "webp"];
-        if (!file.originalname.includes(".")) {
-          res.status(400).json({
-            status: false,
-            statusCode: 400,
-            message: "Format file tidak valid. Hanya diperbolehkan jpg, jpeg, png, webp",
-          });
-          return;
-        }
-        const fileExtension = file.originalname.split(".").pop()?.toLowerCase();
-        if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-          res.status(400).json({
-            status: false,
-            statusCode: 400,
-            message: "Format file tidak valid. Hanya diperbolehkan jpg, jpeg, png, webp",
-          });
-          return;
-        }
-
-        if (!file.buffer) {
-          res.status(400).json({
-            status: false,
-            statusCode: 400,
-            message: "File tidak valid atau corrupt",
-          });
-          return;
-        }
-
         // Hapus gambar lama dari Supabase Storage (jika ada)
         if (oldBumbu.gambar) {
-          const oldFilename = oldBumbu.gambar.split("/").pop();
-          if (oldFilename) {
-            await supabase.storage.from("dagingue-api").remove([`bumbu/${oldFilename}`]);
+          const deleteResult = await deleteImage(oldBumbu.gambar);
+          if (!deleteResult.status) {
+            res.status(500).json({
+              status: false,
+              statusCode: 500,
+              message: `Gagal menghapus gambar dari storage: ${deleteResult.message}`,
+            });
+            return;
           }
         }
 
         // Simpan gambar baru ke Supabase Storage
-        const filename = `bumbu/${Date.now()}-${file.originalname}`;
-        const { error: uploadError } = await supabase.storage.from("dagingue-api").upload(filename, file.buffer, {
-          contentType: file.mimetype,
-        });
+        const result = await uploadImage(file, "bumbu");
 
-        if (uploadError) {
+        if (result.error) {
           res.status(500).json({
             status: false,
             statusCode: 500,
-            message: "Gagal mengunggah gambar ke server",
+            message: `Gagal mengunggah gambar ke server: ${result.error}`,
           });
           return;
         }
 
         // Url gambar baru
-        const { data } = supabase.storage.from("dagingue-api").getPublicUrl(filename);
-        newGambar = data.publicUrl;
+        newGambar = result.publicUrl;
       }
 
       // Update data baru di database
@@ -372,6 +310,32 @@ export class BumbuController {
   static async delete(req: Request, res: Response) {
     try {
       const { id } = req.params;
+
+      // Ambil data bumbu
+      const bumbu = await BumbuService.getBumbuById(id);
+      if (!bumbu) {
+        res.status(404).json({
+          status: false,
+          statusCode: 404,
+          message: "Bumbu tidak ditemukan",
+        });
+        return;
+      }
+
+      // Hapus gambar dari storage
+      const imageUrl = bumbu.gambar;
+
+      const result = await deleteImage(imageUrl);
+      if (!result.status) {
+        res.status(500).json({
+          status: false,
+          statusCode: 500,
+          message: `Gagal menghapus gambar dari storage: ${result.message}`,
+        });
+        return;
+      }
+
+      // Hapus dari database
       const message = await BumbuService.deleteBumbu(id);
       res.status(200).json({
         status: true,
