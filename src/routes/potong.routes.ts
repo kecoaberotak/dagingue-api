@@ -7,8 +7,8 @@ const router = Router();
 
 router.get("/", PotongController.getAll);
 router.get("/:id", PotongController.getById);
-router.post("/", upload.single("gambar"), PotongController.create);
-router.put("/:id", upload.single("gambar"), PotongController.update);
-router.delete("/:id", PotongController.delete);
+router.post("/", verifyToken, upload.single("gambar"), PotongController.create);
+router.put("/:id", verifyToken, upload.single("gambar"), PotongController.update);
+router.delete("/:id", verifyToken, PotongController.delete);
 
 export default router;
