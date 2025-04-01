@@ -2,7 +2,7 @@ import { supabase } from "../config/supabase";
 
 const deleteImage = async (imageUrl: string) => {
   // Ambil path setelah "/object/public/"
-  const filePath = imageUrl.split("/object/public/")[1];
+  const filePath = imageUrl.split("/object/public/dagingue-api/")[1];
 
   if (!filePath) {
     return {
