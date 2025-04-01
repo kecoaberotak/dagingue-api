@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
-import { BumbuService } from "../services/bumbu.service";
-import { supabase } from "../config/supabase";
 import { uploadImage } from "../utils/uploadImage";
 import { deleteImage } from "../utils/deleteImage";
+import { BumbuService } from "../services/bumbu.service";
 
 export class BumbuController {
   static async getAll(req: Request, res: Response) {
