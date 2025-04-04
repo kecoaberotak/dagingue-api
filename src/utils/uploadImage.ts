@@ -36,3 +36,26 @@ export const uploadImage = async (file: Express.Multer.File, folderName: string)
     publicUrl: data.publicUrl,
   };
 };
+
+export const uploadMultipleImage = async (files: Express.Multer.File[], folderName: string): Promise<{ status: boolean; publicUrls?: string[]; error?: string }> => {
+  const uploadedUrls: string[] = [];
+  const errors: string[] = [];
+
+  for (const file of files) {
+    const result = await uploadImage(file, folderName);
+    if (result.status && result.publicUrl) {
+      uploadedUrls.push(result.publicUrl);
+    } else {
+      // Jika ada satu saja yang gagal, langsung return error
+      return {
+        status: false,
+        error: `Gagal mengupload gambar ${file.originalname}`,
+      };
+    }
+  }
+
+  return {
+    status: true,
+    publicUrls: uploadedUrls,
+  };
+};
