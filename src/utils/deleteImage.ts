@@ -1,5 +1,7 @@
 import { supabase } from "../config/supabase";
 
+// keduanya bikin throw new error
+
 const deleteImage = async (imageUrl: string) => {
   // Ambil path setelah "/object/public/"
   const filePath = imageUrl.split("/object/public/dagingue-api/")[1];
@@ -27,4 +29,27 @@ const deleteImage = async (imageUrl: string) => {
   };
 };
 
-export { deleteImage };
+const deleteMultipleImage = async (imageUrls: string[]) => {
+  const errors: string[] = [];
+
+  for (const url of imageUrls) {
+    const result = await deleteImage(url);
+    if (!result.status) {
+      errors.push(result.message);
+    }
+  }
+
+  if (errors.length > 0) {
+    return {
+      status: false,
+      error: errors.join("; "),
+    };
+  }
+
+  return {
+    status: true,
+    message: "Semua gambar berhasil dihapus",
+  };
+};
+
+export { deleteImage, deleteMultipleImage };
