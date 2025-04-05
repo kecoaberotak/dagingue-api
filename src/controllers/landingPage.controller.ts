@@ -65,9 +65,19 @@ export class LandingPageController {
 
   static async create(req: Request, res: Response) {
     try {
-      const { data } = req.body;
+      let parsedData;
+      try {
+        parsedData = JSON.parse(req.body.data);
+      } catch (error) {
+        res.status(400).json({
+          status: false,
+          statusCode: 400,
+          message: "Invalid JSON format in 'data' field",
+        });
+        return;
+      }
 
-      if (!Array.isArray(data) || data.length === 0) {
+      if (!Array.isArray(parsedData) || parsedData.length === 0) {
         res.status(400).json({
           status: false,
           statusCode: 400,
@@ -80,7 +90,7 @@ export class LandingPageController {
 
       const validKeys = ["logo_image", "hero_image", "img_1", "img_2", "banner_product", "banner_footer", "about_us", "social_whatsapp", "social_instagram", "social_shopee"];
 
-      for (const item of data) {
+      for (const item of parsedData) {
         const { key, value } = item;
 
         // pengecekan key dan value
