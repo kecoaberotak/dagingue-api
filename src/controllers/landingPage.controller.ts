@@ -139,7 +139,7 @@ export class LandingPageController {
               return;
             }
 
-            processedValue = JSON.stringify(uploadedImages.publicUrls);
+            processedValue = processedValue = uploadedImages.publicUrls?.[0] ?? ""; // ambil string URL-nya langsung
           }
         }
 
