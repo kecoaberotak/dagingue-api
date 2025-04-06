@@ -1,5 +1,5 @@
 import { Response, Request } from "express";
-import { uploadImage, uploadMultipleImage } from "../utils/uploadImage";
+import { uploadMultipleImage } from "../utils/uploadImage";
 import { deleteImage, deleteMultipleImage } from "../utils/deleteImage";
 import { LandingPageService } from "../services/landingPage.service";
 
@@ -124,19 +124,23 @@ export class LandingPageController {
 
         let processedValue = value;
 
-        if (req.files && (req.files as any)[key]) {
-          const uploadedImages = await uploadMultipleImage((req.files as any)[key], "landing_page");
+        if (req.files && Array.isArray(req.files)) {
+          const matchedFiles = req.files.filter((file) => file.fieldname === key);
 
-          if (!uploadedImages.status) {
-            res.status(400).json({
-              status: false,
-              statusCode: 400,
-              message: uploadedImages.error || "Gagal mengupload gambar",
-            });
-            return;
+          if (matchedFiles.length > 0) {
+            const uploadedImages = await uploadMultipleImage(matchedFiles, "landing_page");
+
+            if (!uploadedImages.status) {
+              res.status(400).json({
+                status: false,
+                statusCode: 400,
+                message: uploadedImages.error || "Gagal mengupload gambar",
+              });
+              return;
+            }
+
+            processedValue = JSON.stringify(uploadedImages.publicUrls);
           }
-
-          processedValue = JSON.stringify(uploadedImages.publicUrls);
         }
 
         const newData = await LandingPageService.createData({ key, value: processedValue });

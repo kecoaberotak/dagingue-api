@@ -9,8 +9,12 @@ export class LandingPageService {
   }
 
   static async getDataByKey(key: string) {
-    const { data, error } = await supabase.from("landing_page").select("*");
-    if (error) throw new Error(error.message);
+    const { data, error } = await supabase.from("landing_page").select("*").eq("key", key).maybeSingle(); // hanya ambil satu data kalau ada
+
+    if (error && error.code !== "PGRST116") {
+      // PGRST116 = no rows found (di Supabase)
+      throw new Error(error.message);
+    }
     return data;
   }
 
