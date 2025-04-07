@@ -1,6 +1,6 @@
 import { Response, Request } from "express";
 import { uploadMultipleImage } from "../utils/uploadImage";
-import { deleteImage, deleteMultipleImage } from "../utils/deleteImage";
+import { deleteMultipleImage } from "../utils/deleteImage";
 import { LandingPageService } from "../services/landingPage.service";
 
 export class LandingPageController {
@@ -136,10 +136,19 @@ export class LandingPageController {
 
   static async update(req: Request, res: Response) {
     try {
-      const { key } = req.params;
-      const { data } = req.body;
+      let parsedData;
+      try {
+        parsedData = JSON.parse(req.body.data);
+      } catch (error) {
+        res.status(400).json({
+          status: false,
+          statusCode: 400,
+          message: "Invalid JSON format in 'data' field",
+        });
+        return;
+      }
 
-      if (!Array.isArray(data) || data.length === 0) {
+      if (!Array.isArray(parsedData) || parsedData.length === 0) {
         res.status(400).json({
           status: false,
           statusCode: 400,
@@ -149,10 +158,12 @@ export class LandingPageController {
       }
 
       const processedData = [];
+
       const validKeys = ["logo_image", "hero_image", "img_1", "img_2", "banner_product", "banner_footer", "about_us", "social_whatsapp", "social_instagram", "social_shopee"];
+
       const imageKeys = ["logo_image", "hero_image", "img_1", "img_2", "banner_product", "banner_footer"];
 
-      for (const item of data) {
+      for (const item of parsedData) {
         const { key, value } = item;
 
         // validasi  key dan value
@@ -187,32 +198,44 @@ export class LandingPageController {
         // default
         let processedValue = value;
 
-        // jika ada file baru, hapus gambar lama dari storage sebelum update
-        if (req.files && (req.files as any)[key]) {
-          if (imageKeys.includes(key) && (existingData as any).value) {
+        if (req.files && Array.isArray(req.files)) {
+          const matchedFiles = req.files.filter((file) => file.fieldname === key);
+
+          if (matchedFiles.length > 0 && imageKeys.includes(key)) {
+            // Hapus gambar lama jika ada
             try {
-              const oldImages = JSON.parse((existingData as any).value);
-              await deleteImage(oldImages);
+              const oldUrls = JSON.parse(existingData.value);
+              const deleteResult = await deleteMultipleImage(oldUrls);
+              if (!deleteResult.status) {
+                res.status(400).json({
+                  status: false,
+                  statusCode: 400,
+                  message: deleteResult.error || "Gagal menghapus gambar lama",
+                });
+                return;
+              }
             } catch (error) {
               console.error("Error parsing existing image URLs:", error);
             }
-          }
-          // Upload gambar baru
-          const uploadedImages = await uploadMultipleImage((req.files as any)[key], "landing_page");
-          if (!uploadedImages.status) {
-            res.status(400).json({
-              status: false,
-              statusCode: 400,
-              message: uploadedImages.error || "Gagal mengupload gambar",
-            });
-            return;
-          }
 
-          processedValue = JSON.stringify(uploadedImages.publicUrls);
+            // Upload gambar baru
+            const uploadedImages = await uploadMultipleImage(matchedFiles, "landing_page");
+
+            if (!uploadedImages.status) {
+              res.status(400).json({
+                status: false,
+                statusCode: 400,
+                message: uploadedImages.error || "Gagal mengupload gambar",
+              });
+              return;
+            }
+
+            processedValue = JSON.stringify(uploadedImages.publicUrls);
+          }
         }
 
         // Update data
-        const updatedData = await LandingPageService.updateData(key, processedValue);
+        const updatedData = await LandingPageService.updateData(key, { value: processedValue });
         processedData.push(updatedData);
       }
       res.status(200).json({
@@ -229,72 +252,6 @@ export class LandingPageController {
         message: error instanceof Error ? error.message : "An unknown error occurred",
       });
       return;
-    }
-  }
-
-  static async delete(req: Request, res: Response) {
-    try {
-      const { key } = req.params;
-
-      if (!key) {
-        res.status(400).json({
-          status: false,
-          statusCode: 400,
-          message: "Key harus disertakan dalam parameter",
-        });
-        return;
-      }
-
-      const existingData = await LandingPageService.getDataByKey(key);
-
-      if (!existingData) {
-        res.status(404).json({
-          status: false,
-          statusCode: 404,
-          message: `Data dengan key '${key}' tidak ditemukan`,
-        });
-        return;
-      }
-
-      const imageKeys = ["logo_image", "hero_image", "img_1", "img_2", "banner_product", "banner_footer"];
-
-      if (imageKeys.includes(key) && (existingData as any).value) {
-        try {
-          const oldImages = JSON.parse((existingData as any).value);
-          const deleteResult = await deleteMultipleImage(oldImages);
-
-          if (!deleteResult.status) {
-            res.status(400).json({
-              status: false,
-              statusCode: 400,
-              message: deleteResult.error || "Gagal menghapus gambar",
-            });
-            return;
-          }
-        } catch (error) {
-          res.status(400).json({
-            status: false,
-            statusCode: 400,
-            message: "Error parsing or deleting images:",
-            error,
-          });
-          return;
-        }
-      }
-
-      await LandingPageService.deleteData(key);
-
-      res.status(200).json({
-        status: true,
-        statusCode: 200,
-        message: `Data dengan key '${key}' berhasil dihapus`,
-      });
-    } catch (error) {
-      res.status(error instanceof Error ? 400 : 500).json({
-        status: false,
-        statusCode: error instanceof Error ? 400 : 500,
-        message: error instanceof Error ? error.message : "Terjadi kesalahan server",
-      });
     }
   }
 }
