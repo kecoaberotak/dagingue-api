@@ -204,8 +204,17 @@ export class LandingPageController {
           if (matchedFiles.length > 0 && imageKeys.includes(key)) {
             // Hapus gambar lama jika ada
             try {
-              const oldUrls = JSON.parse(existingData.value);
+              let oldUrls: string[] = [];
+
+              try {
+                const parsed = JSON.parse(existingData.value);
+                oldUrls = Array.isArray(parsed) ? parsed : [parsed]; // kalau dia string, masukin ke array
+              } catch (error) {
+                oldUrls = [existingData.value]; // fallback kalau parse gagal
+              }
+
               const deleteResult = await deleteMultipleImage(oldUrls);
+
               if (!deleteResult.status) {
                 res.status(400).json({
                   status: false,
@@ -215,13 +224,19 @@ export class LandingPageController {
                 return;
               }
             } catch (error) {
-              console.error("Error parsing existing image URLs:", error);
+              res.status(400).json({
+                status: false,
+                statusCode: 400,
+                message: "Error parsing existing image URLs:",
+                error,
+              });
+              return;
             }
 
             // Upload gambar baru
             const uploadedImages = await uploadMultipleImage(matchedFiles, "landing_page");
 
-            if (!uploadedImages.status) {
+            if (!uploadedImages.status || !uploadedImages.publicUrls || uploadedImages.publicUrls.length === 0) {
               res.status(400).json({
                 status: false,
                 statusCode: 400,
@@ -230,7 +245,8 @@ export class LandingPageController {
               return;
             }
 
-            processedValue = JSON.stringify(uploadedImages.publicUrls);
+            // Ambil hanya 1 URL pertama (karena 1 file untuk 1 key)
+            processedValue = uploadedImages.publicUrls[0];
           }
         }
 
