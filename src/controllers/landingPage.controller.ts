@@ -33,36 +33,6 @@ export class LandingPageController {
     }
   }
 
-  static async getByKey(req: Request, res: Response) {
-    try {
-      const { key } = req.params;
-      const data = await LandingPageService.getDataByKey(key);
-      res.status(200).json({
-        status: true,
-        statusCode: 200,
-        message: `Succes get data for: ${key}`,
-        data,
-      });
-      return;
-    } catch (error) {
-      if (error instanceof Error) {
-        res.status(404).json({
-          status: false,
-          statusCode: 404,
-          message: error.message,
-        });
-        return;
-      } else {
-        res.status(500).json({
-          status: false,
-          statusCode: 500,
-          message: "An unknown error occurred",
-        });
-        return;
-      }
-    }
-  }
-
   static async create(req: Request, res: Response) {
     try {
       let parsedData;
