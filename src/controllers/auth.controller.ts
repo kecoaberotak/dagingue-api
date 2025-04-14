@@ -42,21 +42,12 @@ export class AuthController {
       res.status(201).json({ status: true, statusCode: 201, result });
     } catch (error) {
       logger.error("AuthController: signUp - error", { error });
-      if (error instanceof Error) {
-        res.status(400).json({
-          status: false,
-          statusCode: 400,
-          message: error.message,
-        });
-        return;
-      } else {
-        res.status(500).json({
-          status: false,
-          statusCode: 500,
-          message: "An unknown error occurred",
-        });
-        return;
-      }
+      res.status(error instanceof Error ? 400 : 500).json({
+        status: false,
+        statusCode: error instanceof Error ? 400 : 500,
+        message: error instanceof Error ? error.message : "An unknown error occurred",
+      });
+      return;
     }
   }
 
@@ -86,21 +77,12 @@ export class AuthController {
       res.status(200).json({ status: true, statusCode: 200, result });
     } catch (error) {
       logger.error("AuthController: signIn - error", { error });
-      if (error instanceof Error) {
-        res.status(400).json({
-          status: false,
-          statusCode: 400,
-          message: error.message,
-        });
-        return;
-      } else {
-        res.status(500).json({
-          status: false,
-          statusCode: 500,
-          message: "An unknown error occurred",
-        });
-        return;
-      }
+      res.status(error instanceof Error ? 400 : 500).json({
+        status: false,
+        statusCode: error instanceof Error ? 400 : 500,
+        message: error instanceof Error ? error.message : "An unknown error occurred",
+      });
+      return;
     }
   }
 
@@ -113,21 +95,12 @@ export class AuthController {
       res.status(200).json({ status: true, statusCode: 200, result });
     } catch (error) {
       logger.error("AuthController: signOut - error", { error });
-      if (error instanceof Error) {
-        res.status(400).json({
-          status: false,
-          statusCode: 400,
-          message: error.message,
-        });
-        return;
-      } else {
-        res.status(500).json({
-          status: false,
-          statusCode: 500,
-          message: "An unknown error occurred",
-        });
-        return;
-      }
+      res.status(error instanceof Error ? 400 : 500).json({
+        status: false,
+        statusCode: error instanceof Error ? 400 : 500,
+        message: error instanceof Error ? error.message : "An unknown error occurred",
+      });
+      return;
     }
   }
 }
