@@ -2,11 +2,13 @@ import { Response, Request } from "express";
 import { uploadMultipleImage } from "../utils/uploadImage";
 import { deleteMultipleImage } from "../utils/deleteImage";
 import { LandingPageService } from "../services/landingPage.service";
+import logger from "../utils/logger";
 
 export class LandingPageController {
   static async getAll(req: Request, res: Response) {
     try {
       const data = await LandingPageService.getAllData();
+      logger.info("Landing page data fetched successfully");
       res.status(200).json({
         status: true,
         statusCode: 200,
@@ -15,21 +17,13 @@ export class LandingPageController {
       });
       return;
     } catch (error) {
-      if (error instanceof Error) {
-        res.status(500).json({
-          status: false,
-          statusCode: 500,
-          message: error.message,
-        });
-        return;
-      } else {
-        res.status(500).json({
-          status: false,
-          statusCode: 500,
-          message: "An unknown error occurred",
-        });
-        return;
-      }
+      logger.error({ err: error }, "Failed to fetch landing page data");
+      res.status(500).json({
+        status: false,
+        statusCode: 500,
+        message: error instanceof Error ? error.message : "An unknown error occurred",
+      });
+      return;
     }
   }
 
@@ -38,7 +32,9 @@ export class LandingPageController {
       let parsedData;
       try {
         parsedData = JSON.parse(req.body.data);
+        logger.info(`Parsed landing page create data with ${parsedData.length} items`);
       } catch (error) {
+        logger.warn("Invalid JSON in 'data' field during create");
         res.status(400).json({
           status: false,
           statusCode: 400,
@@ -48,6 +44,7 @@ export class LandingPageController {
       }
 
       if (!Array.isArray(parsedData) || parsedData.length === 0) {
+        logger.warn("Empty or invalid data array on create");
         res.status(400).json({
           status: false,
           statusCode: 400,
@@ -65,6 +62,7 @@ export class LandingPageController {
 
         // pengecekan key dan value
         if (!key || value === undefined) {
+          logger.warn("Missing key or value in one of the create items");
           res.status(400).json({
             status: false,
             statusCode: 400,
@@ -74,6 +72,7 @@ export class LandingPageController {
         }
 
         if (!validKeys.includes(key)) {
+          logger.warn(`Invalid key '${key}' on create`);
           res.status(400).json({
             status: false,
             statusCode: 400,
@@ -84,6 +83,7 @@ export class LandingPageController {
 
         const existingData = await LandingPageService.getDataByKey(key);
         if (existingData) {
+          logger.warn(`Key '${key}' already exists on create`);
           res.status(400).json({
             status: false,
             statusCode: 400,
@@ -101,6 +101,7 @@ export class LandingPageController {
             const uploadedImages = await uploadMultipleImage(matchedFiles, "landing_page");
 
             if (!uploadedImages.status) {
+              logger.error({ err: uploadedImages.error }, `Image upload failed for key '${key}'`);
               res.status(400).json({
                 status: false,
                 statusCode: 400,
@@ -114,9 +115,11 @@ export class LandingPageController {
         }
 
         const newData = await LandingPageService.createData({ key, value: processedValue });
+        logger.info(`Landing page data created for key '${key}'`);
         processedData.push(newData);
       }
 
+      logger.info("Landing page data creation successful");
       res.status(201).json({
         status: true,
         statusCode: 201,
@@ -125,6 +128,7 @@ export class LandingPageController {
       });
       return;
     } catch (error) {
+      logger.error({ err: error }, "Unexpected error during landing page create");
       res.status(error instanceof Error ? 400 : 500).json({
         status: false,
         statusCode: error instanceof Error ? 400 : 500,
@@ -139,7 +143,9 @@ export class LandingPageController {
       let parsedData;
       try {
         parsedData = JSON.parse(req.body.data);
+        logger.info(`Parsed landing page update data with ${parsedData.length} items`);
       } catch (error) {
+        logger.warn("Invalid JSON in 'data' field during update");
         res.status(400).json({
           status: false,
           statusCode: 400,
@@ -149,6 +155,7 @@ export class LandingPageController {
       }
 
       if (!Array.isArray(parsedData) || parsedData.length === 0) {
+        logger.warn("Empty or invalid data array on update");
         res.status(400).json({
           status: false,
           statusCode: 400,
@@ -168,6 +175,7 @@ export class LandingPageController {
 
         // validasi  key dan value
         if (!key || value === undefined) {
+          logger.warn("Missing key or value in one of the update items");
           res.status(400).json({
             status: false,
             statusCode: 400,
@@ -177,6 +185,7 @@ export class LandingPageController {
         }
 
         if (!validKeys.includes(key)) {
+          logger.warn(`Invalid key '${key}' on update`);
           res.status(400).json({
             status: false,
             statusCode: 400,
@@ -187,6 +196,7 @@ export class LandingPageController {
 
         const existingData = await LandingPageService.getDataByKey(key);
         if (!existingData) {
+          logger.warn(`Data with key '${key}' not found for update`);
           res.status(404).json({
             status: false,
             statusCode: 404,
@@ -216,6 +226,7 @@ export class LandingPageController {
               const deleteResult = await deleteMultipleImage(oldUrls);
 
               if (!deleteResult.status) {
+                logger.error({ err: deleteResult.error }, `Failed to delete old image for key '${key}'`);
                 res.status(400).json({
                   status: false,
                   statusCode: 400,
@@ -223,7 +234,9 @@ export class LandingPageController {
                 });
                 return;
               }
+              logger.info(`Old image deleted for key '${key}'`);
             } catch (error) {
+              logger.error({ err: error }, "Error parsing existing image URLs");
               res.status(400).json({
                 status: false,
                 statusCode: 400,
@@ -237,6 +250,7 @@ export class LandingPageController {
             const uploadedImages = await uploadMultipleImage(matchedFiles, "landing_page");
 
             if (!uploadedImages.status || !uploadedImages.publicUrls || uploadedImages.publicUrls.length === 0) {
+              logger.error({ err: uploadedImages.error }, `Image upload failed for key '${key}'`);
               res.status(400).json({
                 status: false,
                 statusCode: 400,
@@ -252,8 +266,10 @@ export class LandingPageController {
 
         // Update data
         const updatedData = await LandingPageService.updateData(key, { value: processedValue });
+        logger.info(`Landing page data updated for key '${key}'`);
         processedData.push(updatedData);
       }
+      logger.info("Landing page data update successful");
       res.status(200).json({
         status: true,
         statusCode: 200,
@@ -262,6 +278,7 @@ export class LandingPageController {
       });
       return;
     } catch (error) {
+      logger.error({ err: error }, "Unexpected error during landing page update");
       res.status(error instanceof Error ? 400 : 500).json({
         status: false,
         statusCode: error instanceof Error ? 400 : 500,
